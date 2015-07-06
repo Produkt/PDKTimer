@@ -8,9 +8,9 @@
 
 import Foundation
 
-typealias TimedActionBlock = ()->()
+public typealias TimedActionBlock = ()->()
 
-class PDKTimer {
+final public class PDKTimer {
     var tolerance:NSTimeInterval = 0
     private let timeInterval:NSTimeInterval
     private var repeats:Bool
@@ -50,38 +50,38 @@ class PDKTimer {
         invalidate()
     }
     
-    class func every(interval: NSTimeInterval, dispatchQueue:dispatch_queue_t, _ block: TimedActionBlock) -> PDKTimer{
+    class public func every(interval: NSTimeInterval, dispatchQueue:dispatch_queue_t, _ block: TimedActionBlock) -> PDKTimer{
         let timer = PDKTimer(timeInterval: interval, repeats: true, dispatchQueue: dispatchQueue, action: block)
         timer.schedule()
         return timer
     }
     
-    class func every(interval: NSTimeInterval, _ block: TimedActionBlock) -> PDKTimer{
+    class public func every(interval: NSTimeInterval, _ block: TimedActionBlock) -> PDKTimer{
         let timer = PDKTimer(timeInterval: interval, repeats: true, action: block)
         timer.schedule()
         return timer
     }
     
-    class func after(interval: NSTimeInterval, dispatchQueue:dispatch_queue_t, _ block: TimedActionBlock) -> PDKTimer{
+    class public func after(interval: NSTimeInterval, dispatchQueue:dispatch_queue_t, _ block: TimedActionBlock) -> PDKTimer{
         let timer = PDKTimer(timeInterval: interval, repeats: false, dispatchQueue: dispatchQueue, action: block)
         timer.schedule()
         return timer
     }
     
-    class func after(interval: NSTimeInterval, _ block: TimedActionBlock) -> PDKTimer{
+    class public func after(interval: NSTimeInterval, _ block: TimedActionBlock) -> PDKTimer{
         let timer = PDKTimer(timeInterval: interval, repeats: false, action: block)
         timer.schedule()
         return timer
     }
     
-    func fire(){
+    public func fire(){
         timerFired()
         if repeats{
             schedule()
         }
     }
     
-    func schedule(){
+    public func schedule(){
         resetTimer()
         dispatch_source_set_event_handler(timer){
             dispatch_async(self.targetDispatchQueue) {
@@ -91,7 +91,7 @@ class PDKTimer {
         dispatch_resume(timer);
     }
     
-    func invalidate(){
+    public func invalidate(){
         dispatchInTimerQueue{
             dispatch_source_cancel(self.timer)
         }
