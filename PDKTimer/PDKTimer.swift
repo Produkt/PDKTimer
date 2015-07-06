@@ -84,9 +84,7 @@ final public class PDKTimer {
     public func schedule(){
         resetTimer()
         dispatch_source_set_event_handler(timer){
-            dispatch_async(self.targetDispatchQueue) {
-                self.timerFired()
-            }
+            self.timerFired()
         }
         dispatch_resume(timer);
     }
@@ -95,6 +93,7 @@ final public class PDKTimer {
         dispatchInTimerQueue{
             dispatch_source_cancel(self.timer)
         }
+        invalidated = true
     }
     
     private func dispatchInTimerQueue(f:()->()){
@@ -110,7 +109,9 @@ final public class PDKTimer {
     private func timerFired(){
         if invalidated { return }
         
-        action()
+        dispatch_async(self.targetDispatchQueue) {
+            self.action()
+        }
         
         if !repeats {
             invalidate()

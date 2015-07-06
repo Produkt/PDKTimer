@@ -33,12 +33,12 @@ class PDKTimerTests: XCTestCase {
     }
     
     func testSimpleDelayedTimer_shouldBeFireableProgramatically(){
-        var fired = false
+        let expectation = self.expectationWithDescription("fire manually")
         timer = PDKTimer(timeInterval: 0.003, repeats: false){
-            fired = true
+            expectation.fulfill()
         }
         timer.fire()
-        XCTAssert(fired)
+        self.waitForExpectationsWithTimeout(0.5) { (let error:NSError?) -> Void in }
     }
     
     func testDelayedTimerWithRepetition_shouldFireMultipleTimes(){
