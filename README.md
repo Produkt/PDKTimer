@@ -1,5 +1,5 @@
 # PDKTimer
-A Simple GCD based Timer
+A simple swift GCD based Timer
 
 ## Why?
 
