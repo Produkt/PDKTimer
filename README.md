@@ -30,6 +30,16 @@ let timer = PDKTimer(timeInterval: 5.0, repeats: true){
 
 and that closure will be executed each 5 seconds
 
+###Note (Scheduling):
+`PDKTimer` instances don't do [auto schedule](#autoscheduling). You have to manually call `schedule` in order to start.
+
+```
+let timer = PDKTimer(timeInterval: 5.0, repeats: true){
+	// do something
+}
+timer.schedule()
+```
+
 
 ##GCD powered
 
@@ -51,7 +61,7 @@ and your closure will be executed on your custom queue
 I really liked [SwiftyTimer](https://github.com/radex/SwiftyTimer) API from [radex](https://github.com/radex), that is a Swift wrapper for `NSTimer`
 So I adopted the API that he suggests. 
 
-You can create repeating and non-repeating timers with `PDKTimer.every` and `PDKTimer.after` 
+You can create repeating and non-repeating timers with `PDKTimer.every` and `PDKTimer.after` short-hand initializers
 
 ```
 PDKTimer.every(5.seconds){
@@ -63,6 +73,27 @@ PDKTimer.after(5.seconds){
 }
 ```
 
+An extension of Double is also defined so you can define time intervals with [Ruby-on-Rails](http://rubyonrails.org/)-like helpers
+
+```
+500.milliseconds
+1.second
+2.5.seconds
+5.seconds
+10.minutes
+1.hour
+```
+
+
+###Note (Scheduling): <a name="autoscheduling"></a>
+`PDKTimer` short-hand initializers **do** auto schedule. So you **don't need** to manually call schedule
+
+```
+PDKTimer.every(5.seconds){
+
+}
+// no scheduling needed
+```
 
 
 ##Author
