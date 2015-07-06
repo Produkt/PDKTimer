@@ -17,6 +17,7 @@ class PDKTimer {
     private var action:()->()
     private var timer:dispatch_source_t
     private var privateSerialQueue:dispatch_queue_t
+    private var targetDispatchQueue:dispatch_queue_t
     private var invalidated = false
     private let token:NSObject
     
@@ -28,7 +29,7 @@ class PDKTimer {
         
         let privateQueueName = NSString(format: "com.produkt.pdktimer.%p", unsafeAddressOf(token))
         privateSerialQueue = dispatch_queue_create(privateQueueName.UTF8String, DISPATCH_QUEUE_SERIAL);
-        dispatch_set_target_queue(privateSerialQueue, dispatchQueue);
+        targetDispatchQueue = dispatchQueue
         
         timer = dispatch_source_create(DISPATCH_SOURCE_TYPE_TIMER, 0, 0, privateSerialQueue);
         
@@ -56,9 +57,11 @@ class PDKTimer {
     
     func schedule(){
         resetTimer()
-        dispatch_source_set_event_handler(timer, {
-            self.timerFired()
-        });
+        dispatch_source_set_event_handler(timer){
+            dispatch_async(self.targetDispatchQueue) {
+                self.timerFired()
+            }
+        }
         dispatch_resume(timer);
     }
     

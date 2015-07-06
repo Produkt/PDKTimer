@@ -26,7 +26,6 @@ class PDKTimerTests: XCTestCase {
         timer = PDKTimer(timeInterval: 0.003, repeats: false){
             expectation.fulfill()
         }
-        
         self.waitForExpectationsWithTimeout(0.5) { (let error:NSError?) -> Void in }
     }
     
@@ -56,5 +55,30 @@ class PDKTimerTests: XCTestCase {
         timer.invalidate()
         NSRunLoop.mainRunLoop().runUntilDate(NSDate(timeIntervalSinceNow: 0.1))
         XCTAssertEqual(fired, false)
+    }
+    
+    func testTimer_shouldFireOnCustomDispatchQueue(){
+        let specificQueueKey = "timerQueue" as NSString
+        let QKEY = specificQueueKey.UTF8String
+        let dispatchQueueId = "com.produkt.pdktimer.test" as NSString
+        var QVAL = dispatchQueueId.UTF8String
+        let dispatchQueue = dispatch_queue_create(QVAL, DISPATCH_QUEUE_SERIAL)
+        dispatch_queue_set_specific(dispatchQueue, QKEY, &QVAL, nil)
+        let expectation = self.expectationWithDescription("custom dispatch queue")
+        let _ = PDKTimer.after(5.milliseconds, dispatchQueue:dispatchQueue){
+            let s = dispatch_get_specific(QKEY)
+            XCTAssert(s == &QVAL)
+            expectation.fulfill()
+        }
+        self.waitForExpectationsWithTimeout(0.5) { (let error:NSError?) -> Void in }
+    }
+    
+    func testTimer_shouldFireOnMainQueue(){
+        let expectation = self.expectationWithDescription("custom dispatch queue")
+        let _ = PDKTimer.after(5.milliseconds, dispatchQueue:dispatch_get_main_queue()){
+            XCTAssert(NSThread.isMainThread())
+            expectation.fulfill()
+        }
+        self.waitForExpectationsWithTimeout(0.5) { (let error:NSError?) -> Void in }
     }
 }
