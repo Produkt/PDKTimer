@@ -48,6 +48,26 @@ class PDKTimer {
         self.invalidate()
     }
     
+    class func every(interval: NSTimeInterval, dispatchQueue:dispatch_queue_t, _ block: TimedActionBlock) -> PDKTimer{
+        let timer = PDKTimer(timeInterval: interval, repeats: true, dispatchQueue: dispatchQueue, action: block)
+        return timer
+    }
+    
+    class func every(interval: NSTimeInterval, _ block: TimedActionBlock) -> PDKTimer{
+        let timer = PDKTimer(timeInterval: interval, repeats: true, action: block)
+        return timer
+    }
+    
+    class func after(interval: NSTimeInterval, dispatchQueue:dispatch_queue_t, _ block: TimedActionBlock) -> PDKTimer{
+        let timer = PDKTimer(timeInterval: interval, repeats: false, dispatchQueue: dispatchQueue, action: block)
+        return timer
+    }
+    
+    class func after(interval: NSTimeInterval, _ block: TimedActionBlock) -> PDKTimer{
+        let timer = PDKTimer(timeInterval: interval, repeats: false, action: block)
+        return timer
+    }
+    
     func fire(){
         timerFired()
         if repeats{
@@ -92,4 +112,15 @@ class PDKTimer {
             UInt64(toleranceInNanoseconds)
         );
     }
+}
+
+extension Double {
+    public var millisecond:  NSTimeInterval { return self / 100 }
+    public var milliseconds:  NSTimeInterval { return self / 100 }
+    public var second:  NSTimeInterval { return self }
+    public var seconds: NSTimeInterval { return self }
+    public var minute:  NSTimeInterval { return self * 60 }
+    public var minutes: NSTimeInterval { return self * 60 }
+    public var hour:    NSTimeInterval { return self * 3600 }
+    public var hours:   NSTimeInterval { return self * 3600 }
 }
