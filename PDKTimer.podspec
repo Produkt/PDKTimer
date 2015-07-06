@@ -16,7 +16,7 @@ Pod::Spec.new do |s|
   #
 
   s.name         = "PDKTimer"
-  s.version      = "0.0.2"
+  s.version      = "0.0.3"
   s.summary      = "A simple swift GCD based Timer"
 
   s.description  = <<-DESC
@@ -34,7 +34,7 @@ Pod::Spec.new do |s|
   s.platform     = :ios, "8.0"
 
 
-  s.source       = { :git => "https://github.com/Produkt/PDKTimer.git", :tag => "0.0.2" }
+  s.source       = { :git => "https://github.com/Produkt/PDKTimer.git", :tag => s.version.to_s }
   s.source_files  = "PDKTimer/*"
 
 end
