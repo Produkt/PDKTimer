@@ -20,6 +20,8 @@ class PDKTimer {
     private var targetDispatchQueue:dispatch_queue_t
     private var invalidated = false
     private let token:NSObject
+    private let privateQueueName:NSString
+    private var QVAL:UnsafePointer<Int8>
     
     init(timeInterval:NSTimeInterval, repeats:Bool, dispatchQueue:dispatch_queue_t, action:TimedActionBlock){
         self.timeInterval = timeInterval
@@ -27,13 +29,13 @@ class PDKTimer {
         self.action = action
         token = NSObject()
         
-        let privateQueueName = NSString(format: "com.produkt.pdktimer.%p", unsafeAddressOf(token))
-        privateSerialQueue = dispatch_queue_create(privateQueueName.UTF8String, DISPATCH_QUEUE_SERIAL);
+        privateQueueName = NSString(format: "com.produkt.pdktimer.%p", unsafeAddressOf(token))
+        QVAL = privateQueueName.UTF8String
+        privateSerialQueue = dispatch_queue_create(privateQueueName.UTF8String, DISPATCH_QUEUE_SERIAL)
+        dispatch_queue_set_specific(privateSerialQueue, QVAL, &QVAL, nil)
         targetDispatchQueue = dispatchQueue
         
-        timer = dispatch_source_create(DISPATCH_SOURCE_TYPE_TIMER, 0, 0, privateSerialQueue);
-        
-        schedule()
+        timer = dispatch_source_create(DISPATCH_SOURCE_TYPE_TIMER, 0, 0, privateSerialQueue)
     }
     
     convenience init(timeInterval:NSTimeInterval, repeats:Bool, action:TimedActionBlock){
@@ -45,26 +47,30 @@ class PDKTimer {
     }
     
     deinit{
-        self.invalidate()
+        invalidate()
     }
     
     class func every(interval: NSTimeInterval, dispatchQueue:dispatch_queue_t, _ block: TimedActionBlock) -> PDKTimer{
         let timer = PDKTimer(timeInterval: interval, repeats: true, dispatchQueue: dispatchQueue, action: block)
+        timer.schedule()
         return timer
     }
     
     class func every(interval: NSTimeInterval, _ block: TimedActionBlock) -> PDKTimer{
         let timer = PDKTimer(timeInterval: interval, repeats: true, action: block)
+        timer.schedule()
         return timer
     }
     
     class func after(interval: NSTimeInterval, dispatchQueue:dispatch_queue_t, _ block: TimedActionBlock) -> PDKTimer{
         let timer = PDKTimer(timeInterval: interval, repeats: false, dispatchQueue: dispatchQueue, action: block)
+        timer.schedule()
         return timer
     }
     
     class func after(interval: NSTimeInterval, _ block: TimedActionBlock) -> PDKTimer{
         let timer = PDKTimer(timeInterval: interval, repeats: false, action: block)
+        timer.schedule()
         return timer
     }
     
@@ -86,10 +92,19 @@ class PDKTimer {
     }
     
     func invalidate(){
-        let invalidableTimer = timer;
-        dispatch_async(privateSerialQueue, {
-            dispatch_source_cancel(invalidableTimer)
-        });
+        dispatchInTimerQueue{
+            dispatch_source_cancel(self.timer)
+        }
+    }
+    
+    private func dispatchInTimerQueue(f:()->()){
+        if &QVAL == dispatch_get_specific(privateQueueName.UTF8String){
+            f()
+        }else{
+            dispatch_sync(privateSerialQueue, {
+                f()
+            });
+        }
     }
     
     private func timerFired(){

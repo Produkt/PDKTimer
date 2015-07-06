@@ -18,7 +18,9 @@ class PDKTimerTests: XCTestCase {
     
     override func tearDown() {
         super.tearDown()
-        timer = nil
+        if timer != nil{
+            timer.invalidate()
+        }
     }
     
     func testSimpleDelayedTimer_shouldFireAutomatically(){
@@ -26,6 +28,7 @@ class PDKTimerTests: XCTestCase {
         timer = PDKTimer(timeInterval: 0.003, repeats: false){
             expectation.fulfill()
         }
+        timer.schedule()
         self.waitForExpectationsWithTimeout(0.5) { (let error:NSError?) -> Void in }
     }
     
@@ -43,6 +46,7 @@ class PDKTimerTests: XCTestCase {
         timer = PDKTimer(timeInterval: 0.003, repeats: true){
             fireCounter++
         }
+        timer.schedule()
         NSRunLoop.mainRunLoop().runUntilDate(NSDate(timeIntervalSinceNow: 0.01))
         XCTAssert(fireCounter >= 3, "should be fired at least 3 times")
     }
@@ -52,6 +56,7 @@ class PDKTimerTests: XCTestCase {
         timer = PDKTimer(timeInterval: 0.003, repeats: false){
             fired = true
         }
+        timer.schedule()
         timer.invalidate()
         NSRunLoop.mainRunLoop().runUntilDate(NSDate(timeIntervalSinceNow: 0.1))
         XCTAssertEqual(fired, false)
