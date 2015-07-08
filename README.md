@@ -103,3 +103,9 @@ Daniel García
 [https://github.com/fillito](https://github.com/fillito)
 [https://github.com/Produkt](https://github.com/Produkt)
 
+
+##Thanks
+
+Thanks to [Javi Soto](https://github.com/JaviSoto) for writing [MSWeakTimer](https://github.com/mindsnacks/MSWeakTimer). It helped me a lot understanding som GCD APIs to implement a timer
+
+Thanks to [Radek Pietruszewski](https://github.com/radex) for designing [SwiftyTimer](https://github.com/radex/SwiftyTimer) API, that I basically ripped off 
