@@ -86,4 +86,17 @@ class PDKTimerTests: XCTestCase {
         }
         self.waitForExpectationsWithTimeout(0.5) { (let error:NSError?) -> Void in }
     }
+    
+    func testLimitedTimer_shouldRepeatEachTimeAndComplete(){
+        let limitDate = NSDate(timeIntervalSinceNow: 1)
+        var repetitions = 0
+        let expectation = self.expectationWithDescription("limited timer")
+        let _ = PDKTimer.until(limitDate, interval: 0.1, repetition: {
+            repetitions++
+        }) {
+            expectation.fulfill()
+        }
+        self.waitForExpectationsWithTimeout(1) { (let error:NSError?) -> Void in }
+        XCTAssertEqual(repetitions, 10)
+    }
 }

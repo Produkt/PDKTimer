@@ -8,13 +8,15 @@
 
 import Foundation
 
-public typealias TimedActionBlock = ()->()
+public typealias PDKTimerBlock = ()->()
 
 final public class PDKTimer {
     var tolerance:NSTimeInterval = 0
     private let timeInterval:NSTimeInterval
     private var repeats:Bool
-    private var action:()->()
+    private var action:PDKTimerBlock
+    private var completion:PDKTimerBlock?
+    private var completionDate:NSDate?
     private var timer:dispatch_source_t
     private var privateSerialQueue:dispatch_queue_t
     private var targetDispatchQueue:dispatch_queue_t
@@ -23,7 +25,7 @@ final public class PDKTimer {
     private let privateQueueName:NSString
     private var QVAL:UnsafePointer<Int8>
     
-    init(timeInterval:NSTimeInterval, repeats:Bool, dispatchQueue:dispatch_queue_t, action:TimedActionBlock){
+    init(timeInterval:NSTimeInterval, repeats:Bool, dispatchQueue:dispatch_queue_t, action:PDKTimerBlock){
         self.timeInterval = timeInterval
         self.repeats = repeats
         self.action = action
@@ -38,11 +40,17 @@ final public class PDKTimer {
         timer = dispatch_source_create(DISPATCH_SOURCE_TYPE_TIMER, 0, 0, privateSerialQueue)
     }
     
-    convenience init(timeInterval:NSTimeInterval, repeats:Bool, action:TimedActionBlock){
+    convenience init(timeInterval:NSTimeInterval, limitDate:NSDate, dispatchQueue:dispatch_queue_t, action:PDKTimerBlock, completion:PDKTimerBlock){
+        self.init(timeInterval:timeInterval, repeats:true, dispatchQueue:dispatchQueue, action:action)
+        self.completion = completion
+        self.completionDate = limitDate        
+    }
+    
+    convenience init(timeInterval:NSTimeInterval, repeats:Bool, action:PDKTimerBlock){
         self.init(timeInterval:timeInterval, repeats:repeats, dispatchQueue:dispatch_get_main_queue(), action:action)
     }
     
-    convenience init(timeInterval:NSTimeInterval, action:TimedActionBlock){
+    convenience init(timeInterval:NSTimeInterval, action:PDKTimerBlock){
         self.init(timeInterval:timeInterval, repeats:false, action:action)
     }
     
@@ -50,26 +58,38 @@ final public class PDKTimer {
         invalidate()
     }
     
-    class public func every(interval: NSTimeInterval, dispatchQueue:dispatch_queue_t, _ block: TimedActionBlock) -> PDKTimer{
+    class public func every(interval: NSTimeInterval, dispatchQueue:dispatch_queue_t, _ block: PDKTimerBlock) -> PDKTimer{
         let timer = PDKTimer(timeInterval: interval, repeats: true, dispatchQueue: dispatchQueue, action: block)
         timer.schedule()
         return timer
     }
     
-    class public func every(interval: NSTimeInterval, _ block: TimedActionBlock) -> PDKTimer{
+    class public func every(interval: NSTimeInterval, _ block: PDKTimerBlock) -> PDKTimer{
         let timer = PDKTimer(timeInterval: interval, repeats: true, action: block)
         timer.schedule()
         return timer
     }
     
-    class public func after(interval: NSTimeInterval, dispatchQueue:dispatch_queue_t, _ block: TimedActionBlock) -> PDKTimer{
+    class public func after(interval: NSTimeInterval, dispatchQueue:dispatch_queue_t, _ block: PDKTimerBlock) -> PDKTimer{
         let timer = PDKTimer(timeInterval: interval, repeats: false, dispatchQueue: dispatchQueue, action: block)
         timer.schedule()
         return timer
     }
     
-    class public func after(interval: NSTimeInterval, _ block: TimedActionBlock) -> PDKTimer{
+    class public func after(interval: NSTimeInterval, _ block: PDKTimerBlock) -> PDKTimer{
         let timer = PDKTimer(timeInterval: interval, repeats: false, action: block)
+        timer.schedule()
+        return timer
+    }
+    
+    class public func until(date:NSDate, interval:NSTimeInterval, dispatchQueue:dispatch_queue_t, repetition:PDKTimerBlock, completion:PDKTimerBlock) -> PDKTimer{
+        let timer = PDKTimer(timeInterval: interval, limitDate: date, dispatchQueue: dispatchQueue, action: repetition, completion: completion)
+        timer.schedule()
+        return timer
+    }
+    
+    class public func until(date:NSDate, interval:NSTimeInterval, repetition:PDKTimerBlock, completion:PDKTimerBlock) -> PDKTimer{
+        let timer = PDKTimer(timeInterval: interval, limitDate: date, dispatchQueue: dispatch_get_main_queue(), action: repetition, completion: completion)
         timer.schedule()
         return timer
     }
@@ -114,6 +134,14 @@ final public class PDKTimer {
             }
             
             if !self.repeats {
+                self.invalidate()
+            }
+            
+            if let limitDate = self.completionDate where NSDate().compare(limitDate) == NSComparisonResult.OrderedDescending,
+                let completionBlock = self.completion{
+                dispatch_async(self.targetDispatchQueue) {
+                    completionBlock()
+                }
                 self.invalidate()
             }
         }
