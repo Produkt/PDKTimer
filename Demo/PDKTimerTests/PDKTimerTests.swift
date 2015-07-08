@@ -91,7 +91,8 @@ class PDKTimerTests: XCTestCase {
         let limitDate = NSDate(timeIntervalSinceNow: 1)
         var repetitions = 0
         let expectation = self.expectationWithDescription("limited timer")
-        let _ = PDKTimer.until(limitDate, interval: 0.1, repetition: {
+        let _ = PDKTimer.until(limitDate, interval: 0.1, repetition: { (current:NSTimeInterval, total:NSTimeInterval) in
+            NSLog("%f / %f", current,total)
             repetitions++
         }) {
             expectation.fulfill()
